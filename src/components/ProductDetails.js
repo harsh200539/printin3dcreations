@@ -31,12 +31,13 @@ const ProductDetails = () => {
 
     // Stable Data Selection
     const topic = useMemo(() => {
-        return topicsData.find(t => t.id === Number(topicId) || slugify(t.title) === topicId);
+        const found = topicsData.find(t => t.id === Number(topicId) || slugify(t.title) === topicId);
+        return (found && found.isActive !== false && found.is_active !== false) ? found : null;
     }, [topicsData, topicId]);
 
     const products = useMemo(() => {
         if (!topic) return [];
-        return subProductsMap[topic.id] || [];
+        return (subProductsMap[topic.id] || []).filter(p => p.isActive !== false && p.is_active !== false);
     }, [subProductsMap, topic]);
 
     const sortedProducts = useMemo(() => {

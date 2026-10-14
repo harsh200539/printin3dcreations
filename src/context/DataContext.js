@@ -85,8 +85,10 @@ export const DataProvider = ({ children, initialData = null }) => {
         try {
             let data;
             if (process.env.NODE_ENV === 'development' || window.location.pathname.startsWith('/admin')) {
+                const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+                const query = isAdmin ? '?all=true' : '';
                 const responses = await Promise.all(['topics', 'products'].map(endpoint =>
-                    fetch(`${API_BASE}/${endpoint}/`, { signal: AbortSignal.timeout(15000) })));
+                    fetch(`${API_BASE}/${endpoint}/${query}`, { signal: AbortSignal.timeout(15000) })));
                 if (responses.some(r => !r.ok)) throw new Error('Catalog API unavailable');
                 const [topics, products] = await Promise.all(responses.map(r => r.json()));
                 data = normalizeCatalog(topics, products);

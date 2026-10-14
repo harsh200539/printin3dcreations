@@ -8,7 +8,9 @@ import {
     Edit,
     Trash2,
     X,
-    Upload
+    Upload,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import '../CSS/Admin.css';
 
@@ -24,7 +26,9 @@ const AdminTopics = () => {
     const [desc, setDesc] = useState('');
     const [details, setDetails] = useState('');
     const [image, setImage] = useState('');
+    const [isActive, setIsActive] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const [togglingTopicId, setTogglingTopicId] = useState(null);
 
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
@@ -57,6 +61,7 @@ const AdminTopics = () => {
         setDesc('');
         setDetails('');
         setImage('');
+        setIsActive(true);
         setError('');
         setModalOpen(true);
     };
@@ -68,6 +73,7 @@ const AdminTopics = () => {
         setDesc(topic.desc);
         setDetails(topic.details || '');
         setImage(topic.image || '');
+        setIsActive(topic.is_active !== undefined ? topic.is_active : (topic.isActive !== undefined ? topic.isActive : true));
         setError('');
         setModalOpen(true);
     };
@@ -87,7 +93,7 @@ const AdminTopics = () => {
         }
 
         setSaving(true);
-        const payload = { title, icon, desc, details, image };
+        const payload = { title, icon, desc, details, image, is_active: isActive };
 
         try {
             let response;
@@ -119,6 +125,35 @@ const AdminTopics = () => {
             setError('Network error. Failed to save.');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleToggleActive = async (topic) => {
+        if (!isBackendOnline) {
+            alert('Modifications are disabled in offline mode.');
+            return;
+        }
+        const current = topic.is_active !== undefined ? topic.is_active : (topic.isActive !== undefined ? topic.isActive : true);
+        const newStatus = !current;
+        setTogglingTopicId(topic.id);
+        try {
+            const response = await adminFetch(`${API_BASE}/topics/${topic.id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_active: newStatus })
+            });
+
+            if (response.ok) {
+                await refreshData();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || 'Failed to update category status.');
+            }
+        } catch (err) {
+            console.error("Toggle topic error", err);
+            alert('Network error. Failed to update category status.');
+        } finally {
+            setTogglingTopicId(null);
         }
     };
 
@@ -165,6 +200,7 @@ const AdminTopics = () => {
                                 {/* <th>Icon</th> */}
                                 <th>Title</th>
                                 <th>Description</th>
+                                <th style={{ textAlign: 'center' }}>Status / Visibility</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -191,6 +227,32 @@ const AdminTopics = () => {
                                     <td style={{ fontWeight: 600 }}>{topic.title}</td>
                                     <td style={{ color: 'var(--admin-text-muted)', maxWidth: '280px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                                         {topic.desc}
+                                    </td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleToggleActive(topic)}
+                                            disabled={togglingTopicId === topic.id}
+                                            title={(topic.is_active !== false && topic.isActive !== false) ? "Click to temporarily pause/hide this category" : "Click to activate and show this category in store"}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                padding: '6px 14px',
+                                                borderRadius: '20px',
+                                                border: (topic.is_active !== false && topic.isActive !== false) ? '1px solid #10B981' : '1px solid #F59E0B',
+                                                background: (topic.is_active !== false && topic.isActive !== false) ? '#ECFDF5' : '#FEF3C7',
+                                                color: (topic.is_active !== false && topic.isActive !== false) ? '#065F46' : '#92400E',
+                                                cursor: togglingTopicId === topic.id ? 'wait' : 'pointer',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 700,
+                                                opacity: togglingTopicId === topic.id ? 0.6 : 1,
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                        >
+                                            {(topic.is_active !== false && topic.isActive !== false) ? <Eye size={14} /> : <EyeOff size={14} />}
+                                            {(topic.is_active !== false && topic.isActive !== false) ? 'Active' : 'Paused (Click to Activate)'}
+                                        </button>
                                     </td>
                                     <td>
                                         <div className="table-actions">
@@ -328,6 +390,23 @@ const AdminTopics = () => {
                                             </button>
                                         </div>
                                     )}
+                                </div>
+
+                                <div className="admin-form-group" style={{ background: '#F8FAFC', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--admin-border)', marginTop: '16px' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={isActive}
+                                            onChange={(e) => setIsActive(e.target.checked)}
+                                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10B981' }}
+                                        />
+                                        <div>
+                                            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0F172A' }}>Active & Visible in Store</span>
+                                            <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748B' }}>
+                                                Uncheck to temporarily hide or block this entire category and all its products from customer storefront and search.
+                                            </p>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
 

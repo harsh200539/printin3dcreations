@@ -40,7 +40,8 @@ const SubProductDetails = () => {
 
     // Optimized Data Lookups (Stable for Refactor)
     const topic = useMemo(() => {
-        return topicsData.find(t => t.id === Number(topicId) || slugify(t.title) === topicId);
+        const found = topicsData.find(t => t.id === Number(topicId) || slugify(t.title) === topicId);
+        return (found && found.isActive !== false && found.is_active !== false) ? found : null;
     }, [topicsData, topicId]);
 
     const products = useMemo(() => {
@@ -49,7 +50,8 @@ const SubProductDetails = () => {
     }, [subProductsMap, topic]);
 
     const product = useMemo(() => {
-        return products.find(p => p.id === productId || slugify(p.name) === productId);
+        const found = products.find(p => p.id === productId || slugify(p.name) === productId);
+        return (found && found.isActive !== false && found.is_active !== false) ? found : null;
     }, [products, productId]);
 
     const galleryImages = useMemo(() => {

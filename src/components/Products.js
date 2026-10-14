@@ -28,7 +28,7 @@ const Products = () => {
                 </div>
 
                 <div className="category-grid-premium">
-                    {topicsData.map((topic, index) => {
+                    {topicsData.filter(topic => topic.isActive !== false && topic.is_active !== false).map((topic, index) => {
                         const thumbnailImg = getTopicImage(topic);
                         return (
                             <Link

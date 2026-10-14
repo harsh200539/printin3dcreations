@@ -315,7 +315,8 @@ for topic_data in topics:
         icon=topic_data["icon"],
         desc=topic_data["desc"],
         details=topic_data["details"],
-        image=topic_data.get("image", None)
+        image=topic_data.get("image", None),
+        is_active=topic_data.get("isActive", topic_data.get("is_active", True))
     )
     created_topics[topic.id] = topic
     print(f"Created Topic: {topic.title}")
@@ -344,7 +345,8 @@ for topic_id, products in sub_products.items():
             customization_label=prod.get("customizationLabel", ""),
             customization_placeholder=prod.get("customizationPlaceholder", ""),
             custom_letters_limit=prod.get("customLettersLimit", 50),
-            is_bestseller=prod.get("isBestseller", False)
+            is_bestseller=prod.get("isBestseller", False),
+            is_active=prod.get("isActive", prod.get("is_active", True))
         )
         print(f"Created Product: {prod['name']} under {topic.title}")
 

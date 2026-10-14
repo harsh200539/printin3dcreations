@@ -6,6 +6,7 @@ class Topic(models.Model):
     desc = models.TextField()
     details = models.TextField(blank=True, null=True)
     image = models.CharField(max_length=500, blank=True, null=True)
+    is_active = models.BooleanField(default=True, db_index=True, help_text="Uncheck to hide/block this category and its products from the store")
 
     def __str__(self):
         return self.title
@@ -27,6 +28,7 @@ class Product(models.Model):
     customization_placeholder = models.CharField(max_length=255, blank=True, null=True)
     custom_letters_limit = models.IntegerField(default=50, blank=True, null=True)
     is_bestseller = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True, db_index=True, help_text="Uncheck to hide/block this product from the store")
 
     def __str__(self):
         return f"{self.topic.title}: {self.name}"

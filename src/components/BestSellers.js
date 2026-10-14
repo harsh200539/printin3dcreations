@@ -26,8 +26,10 @@ const BestSellers = () => {
     let backendSupportsBestseller = false;
 
     topicsData.forEach(topic => {
+        if (topic.isActive === false || topic.is_active === false) return;
         const products = subProductsMap[topic.id] || [];
         products.forEach(product => {
+            if (product.isActive === false || product.is_active === false) return;
             if (product.rawHasBestseller) {
                 backendSupportsBestseller = true;
             }
@@ -40,10 +42,12 @@ const BestSellers = () => {
     const bestsellers = backendSupportsBestseller
         ? dynamicBestsellers
         : BESTSELLER_REFS.map(({ topicId, productId }) => {
+            const topic = topicsData.find(t => t.id === topicId);
+            if (!topic || topic.isActive === false || topic.is_active === false) return null;
             const products = subProductsMap[topicId] || [];
             const product = products.find(p => p.id === productId);
-            const topic = topicsData.find(t => t.id === topicId);
-            return product && topic ? { ...product, topicId, topic } : null;
+            if (!product || product.isActive === false || product.is_active === false) return null;
+            return { ...product, topicId, topic };
         }).filter(Boolean);
 
     if (bestsellers.length === 0) {

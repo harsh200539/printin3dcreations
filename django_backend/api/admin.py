@@ -3,15 +3,17 @@ from .models import Topic, Product, SiteSetting
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'icon')
+    list_display = ('id', 'title', 'icon', 'is_active')
+    list_filter = ('is_active',)
+    list_editable = ('is_active',)
     search_fields = ('title', 'desc')
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('product_id', 'name', 'topic', 'price', 'is_bestseller', 'customizable', 'has_colors')
-    list_filter = ('is_bestseller', 'topic', 'customizable', 'has_colors')
+    list_display = ('product_id', 'name', 'topic', 'price', 'is_active', 'is_bestseller', 'customizable', 'has_colors')
+    list_filter = ('is_active', 'is_bestseller', 'topic', 'customizable', 'has_colors')
     search_fields = ('product_id', 'name', 'desc')
-    list_editable = ('is_bestseller', 'price')
+    list_editable = ('is_active', 'is_bestseller', 'price')
 
 @admin.register(SiteSetting)
 class SiteSettingAdmin(admin.ModelAdmin):

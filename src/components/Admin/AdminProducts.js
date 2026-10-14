@@ -10,7 +10,9 @@ import {
     X,
     Upload,
     Search,
-    Star
+    Star,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import '../CSS/Admin.css';
 
@@ -31,6 +33,7 @@ const AdminProducts = () => {
     const [customizationLabel, setCustomizationLabel] = useState('');
     const [customizationPlaceholder, setCustomizationPlaceholder] = useState('');
     const [customLettersLimit, setCustomLettersLimit] = useState(50);
+    const [isActive, setIsActive] = useState(true);
 
     // Dynamic Lists states
     const [features, setFeatures] = useState([]);
@@ -46,6 +49,7 @@ const AdminProducts = () => {
     const [uploading, setUploading] = useState(false);
     const [isBestseller, setIsBestseller] = useState(false);
     const [togglingBestsellerId, setTogglingBestsellerId] = useState(null);
+    const [togglingActiveId, setTogglingActiveId] = useState(null);
 
     // Flat list of products for the table
     const productsList = useMemo(() => {
@@ -56,7 +60,8 @@ const AdminProducts = () => {
                 list.push({
                     ...p,
                     categoryName: category ? category.title : `Category #${topicId}`,
-                    categoryId: Number(topicId)
+                    categoryId: Number(topicId),
+                    categoryActive: category ? (category.is_active !== false && category.isActive !== false) : true
                 });
             });
         });
@@ -66,11 +71,18 @@ const AdminProducts = () => {
     // Filtering & Searching
     const filteredProducts = useMemo(() => {
         return productsList.filter(p => {
-            const matchesTopic = selectedTopicId === 'all'
-                ? true
-                : selectedTopicId === 'bestsellers'
-                    ? !!p.isBestseller
-                    : p.categoryId === Number(selectedTopicId);
+            let matchesTopic = true;
+            if (selectedTopicId === 'all') {
+                matchesTopic = true;
+            } else if (selectedTopicId === 'bestsellers') {
+                matchesTopic = !!p.isBestseller;
+            } else if (selectedTopicId === 'active') {
+                matchesTopic = p.isActive !== false && p.is_active !== false;
+            } else if (selectedTopicId === 'hidden') {
+                matchesTopic = p.isActive === false || p.is_active === false;
+            } else {
+                matchesTopic = p.categoryId === Number(selectedTopicId);
+            }
             const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 p.desc.toLowerCase().includes(searchTerm.toLowerCase());
             return matchesTopic && matchesSearch;
@@ -94,6 +106,7 @@ const AdminProducts = () => {
         setCustomizationPlaceholder('');
         setCustomLettersLimit(50);
         setIsBestseller(false);
+        setIsActive(true);
         setError('');
         setModalOpen(true);
     };
@@ -125,6 +138,7 @@ const AdminProducts = () => {
         setCustomizationPlaceholder(p.customizationPlaceholder || '');
         setCustomLettersLimit(p.customLettersLimit || 50);
         setIsBestseller(!!p.isBestseller);
+        setIsActive(p.is_active !== undefined ? p.is_active : (p.isActive !== undefined ? p.isActive : true));
         setError('');
         setModalOpen(true);
     };
@@ -255,7 +269,8 @@ const AdminProducts = () => {
             customization_label: customizationLabel,
             customization_placeholder: customizationPlaceholder,
             custom_letters_limit: Number(customLettersLimit),
-            is_bestseller: isBestseller
+            is_bestseller: isBestseller,
+            is_active: isActive
         };
 
         try {
@@ -343,6 +358,35 @@ const AdminProducts = () => {
         }
     };
 
+    const handleToggleActive = async (p) => {
+        if (!isBackendOnline) {
+            alert('Modifications are disabled in offline mode.');
+            return;
+        }
+        const current = p.is_active !== undefined ? p.is_active : (p.isActive !== undefined ? p.isActive : true);
+        const newStatus = !current;
+        setTogglingActiveId(p.id);
+        try {
+            const response = await adminFetch(`${API_BASE}/products/${p.dbId}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_active: newStatus })
+            });
+
+            if (response.ok) {
+                await refreshData();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || 'Failed to update product visibility.');
+            }
+        } catch (err) {
+            console.error("Toggle product visibility error", err);
+            alert('Network error. Failed to update product visibility.');
+        } finally {
+            setTogglingActiveId(null);
+        }
+    };
+
     return (
         <div style={{ animation: 'modalSlideUp 0.4s ease' }}>
             {/* Header controls filter */}
@@ -366,15 +410,21 @@ const AdminProducts = () => {
                         {/* Category filter */}
                         <select
                             className="admin-form-control"
-                            style={{ width: '200px' }}
+                            style={{ width: '220px' }}
                             value={selectedTopicId}
                             onChange={(e) => setSelectedTopicId(e.target.value)}
                         >
-                            <option value="all">All Categories</option>
+                            <option value="all">All Products</option>
+                            <option value="active">🟢 Active / Visible Only</option>
+                            <option value="hidden">🚫 Hidden / Blocked Only</option>
                             <option value="bestsellers">⭐ Bestsellers Only</option>
-                            {topicsData.map(t => (
-                                <option key={t.id} value={t.id}>{t.title}</option>
-                            ))}
+                            <optgroup label="Filter by Category">
+                                {topicsData.map(t => (
+                                    <option key={t.id} value={t.id}>
+                                        {t.title} {(t.is_active === false || t.isActive === false) ? '(Hidden Cat)' : ''}
+                                    </option>
+                                ))}
+                            </optgroup>
                         </select>
                     </div>
 
@@ -400,6 +450,7 @@ const AdminProducts = () => {
                                 <th>Category</th>
                                 <th>Price</th>
                                 <th style={{ textAlign: 'center' }}>Bestseller</th>
+                                <th style={{ textAlign: 'center' }}>Visibility</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -448,6 +499,37 @@ const AdminProducts = () => {
                                             <Star size={14} fill={p.isBestseller ? "#F59E0B" : "none"} color={p.isBestseller ? "#D97706" : "currentColor"} />
                                             {p.isBestseller ? 'Bestseller' : 'Standard'}
                                         </button>
+                                    </td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleToggleActive(p)}
+                                            disabled={togglingActiveId === p.id}
+                                            title={(p.is_active !== false && p.isActive !== false) ? "Click to temporarily pause/hide this product from store" : "Click to activate and show this product in store"}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                padding: '6px 14px',
+                                                borderRadius: '20px',
+                                                border: (p.is_active !== false && p.isActive !== false) ? '1px solid #10B981' : '1px solid #F59E0B',
+                                                background: (p.is_active !== false && p.isActive !== false) ? '#ECFDF5' : '#FEF3C7',
+                                                color: (p.is_active !== false && p.isActive !== false) ? '#065F46' : '#92400E',
+                                                cursor: togglingActiveId === p.id ? 'wait' : 'pointer',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 700,
+                                                opacity: togglingActiveId === p.id ? 0.6 : 1,
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                        >
+                                            {(p.is_active !== false && p.isActive !== false) ? <Eye size={14} /> : <EyeOff size={14} />}
+                                            {(p.is_active !== false && p.isActive !== false) ? 'Active' : 'Paused (Click to Activate)'}
+                                        </button>
+                                        {p.categoryActive === false && (
+                                            <div style={{ fontSize: '0.68rem', color: '#B45309', fontWeight: 600, marginTop: '2px' }}>
+                                                (Category Paused)
+                                            </div>
+                                        )}
                                     </td>
                                     <td>
                                         <div className="table-actions">
@@ -608,6 +690,29 @@ const AdminProducts = () => {
                                             />
                                         </div>
                                     </div>
+                                    {/* Product Active / Visibility Toggle */}
+                                    <div className="admin-form-group" style={{
+                                        marginBottom: '16px',
+                                        padding: '12px 14px',
+                                        background: isActive ? '#ECFDF5' : '#FFF1F2',
+                                        border: isActive ? '1px solid #A7F3D0' : '1px solid #FECDD3',
+                                        borderRadius: '6px',
+                                        transition: 'all 0.2s ease'
+                                    }}>
+                                        <label className="admin-checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 600, color: isActive ? '#065F46' : '#9F1239' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isActive}
+                                                onChange={(e) => setIsActive(e.target.checked)}
+                                                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10B981' }}
+                                            />
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                {isActive ? <Eye size={16} /> : <EyeOff size={16} />}
+                                                Active & Visible in Store (uncheck to temporarily hide or block this product)
+                                            </span>
+                                        </label>
+                                    </div>
+
                                     {/* Bestseller Toggle */}
                                     <div className="admin-form-group" style={{
                                         marginBottom: '20px',

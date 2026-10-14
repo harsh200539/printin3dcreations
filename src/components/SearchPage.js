@@ -19,16 +19,21 @@ const SearchPage = () => {
         setSearchQuery(q);
         
         if (q.trim()) {
-            const allProducts = Object.values(subProductsMap).flat();
+            const activeTopics = new Set(topicsData.filter(t => t.isActive !== false && t.is_active !== false).map(t => Number(t.id)));
+            const allProducts = Object.entries(subProductsMap)
+                .filter(([topicId]) => activeTopics.has(Number(topicId)))
+                .map(([, prods]) => prods)
+                .flat();
             const filtered = allProducts.filter(p => 
-                p.name.toLowerCase().includes(q.toLowerCase()) || 
-                p.desc.toLowerCase().includes(q.toLowerCase())
+                (p.isActive !== false && p.is_active !== false) &&
+                (p.name.toLowerCase().includes(q.toLowerCase()) || 
+                p.desc.toLowerCase().includes(q.toLowerCase()))
             );
             setResults(filtered);
         } else {
             setResults([]);
         }
-    }, [location.search, subProductsMap]);
+    }, [location.search, subProductsMap, topicsData]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -122,7 +127,7 @@ const SearchPage = () => {
                             <div className="suggested-categories">
                                 <h3>Suggested Collections</h3>
                                 <div className="suggestion-chips">
-                                    {topicsData.slice(0, 4).map(topic => (
+                                    {topicsData.filter(t => t.isActive !== false && t.is_active !== false).slice(0, 4).map(topic => (
                                         <button 
                                             key={topic.id} 
                                             className="suggestion-chip"
