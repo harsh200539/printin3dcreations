@@ -23,6 +23,8 @@ class Product(models.Model):
     features = models.JSONField(default=list, blank=True) # e.g. ["Personalized", "Durable"]
     has_colors = models.BooleanField(default=False)
     color_options = models.JSONField(default=list, blank=True) # e.g. [{"color": "Red", "images": [...]}]
+    has_sets = models.BooleanField(default=False, help_text="Enable quantity/bundle set options with custom pricing (e.g. Set of 2)")
+    set_options = models.JSONField(default=list, blank=True, help_text="List of set tiers, e.g. [{'name': 'Set of 2', 'quantity': 2, 'price': 299}]")
     customizable = models.BooleanField(default=False)
     customization_label = models.CharField(max_length=255, blank=True, null=True)
     customization_placeholder = models.CharField(max_length=255, blank=True, null=True)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useData } from '../context/DataContext';
 import { useScrollReveal } from '../hooks/useScrollReveal';
@@ -12,7 +12,8 @@ import {
     Scale, 
     Box, 
     PenTool, 
-    HelpCircle
+    HelpCircle,
+    RotateCcw
 } from 'lucide-react';
 import './CSS/SubProductDetails.css';
 import NotFound from './NotFound';
@@ -37,6 +38,7 @@ const SubProductDetails = () => {
     const [activeImg, setActiveImg] = useState(0);
     const [isAdded, setIsAdded] = useState(false);
     const [selectedColor, setSelectedColor] = useState(0);
+    const [selectedSetIdx, setSelectedSetIdx] = useState(-1);
 
     // Optimized Data Lookups (Stable for Refactor)
     const topic = useMemo(() => {
@@ -54,18 +56,34 @@ const SubProductDetails = () => {
         return (found && found.isActive !== false && found.is_active !== false) ? found : null;
     }, [products, productId]);
 
-    const galleryImages = useMemo(() => {
+    const activeColorOpt = useMemo(() => {
         if (product && product.hasColors && product.colorOptions && product.colorOptions.length > 0) {
-            const opt = product.colorOptions[selectedColor];
-            return opt && opt.images && opt.images.length > 0 ? opt.images : (product.images || []);
+            return product.colorOptions[selectedColor] || product.colorOptions[0];
+        }
+        return null;
+    }, [product, selectedColor]);
+
+    const galleryImages = useMemo(() => {
+        if (activeColorOpt && activeColorOpt.images && activeColorOpt.images.length > 0) {
+            return activeColorOpt.images;
         }
         return product ? (product.images || []) : [];
-    }, [product, selectedColor]);
+    }, [product, activeColorOpt]);
+
+    const selectedSet = useMemo(() => {
+        if (product && product.hasSets && product.setOptions && selectedSetIdx >= 0 && selectedSetIdx < product.setOptions.length) {
+            return product.setOptions[selectedSetIdx];
+        }
+        return null;
+    }, [product, selectedSetIdx]);
+
+    const currentPrice = selectedSet && selectedSet.price !== undefined ? Number(selectedSet.price) : Number(product?.price || 0);
 
     useEffect(() => {
         window.scrollTo(0, 0);
         setSelectedColor(0);
         setActiveImg(0);
+        setSelectedSetIdx(-1);
     }, [productId]);
 
     if (loading) return <div className="error-container" role="status">Loading product...</div>;
@@ -79,17 +97,18 @@ const SubProductDetails = () => {
             return;
         }
         
-        const activeColorOpt = product.hasColors && product.colorOptions && product.colorOptions[selectedColor];
         const selectedColorName = activeColorOpt ? activeColorOpt.color : null;
+        const selectedSetName = selectedSet ? (selectedSet.name || `Set of ${selectedSet.quantity}`) : null;
 
         // Ensure we pass the customization text under the key expected by CartContext
         addToCart({
             id: product.id,
             title: `${topic.title}: ${product.name}`,
-            price: product.price,
+            price: currentPrice,
             image: galleryImages[activeImg] || null,
             customizationText: product.customizable ? customText : null,
-            selectedColor: selectedColorName
+            selectedColor: selectedColorName,
+            selectedSet: selectedSetName
         });
         
         setIsAdded(true);
@@ -112,7 +131,7 @@ const SubProductDetails = () => {
                             {galleryImages && galleryImages[activeImg] ? (
                                 <img 
                                     src={galleryImages[activeImg]} 
-                                    alt={product.name} 
+                                    alt={`${product.name}${activeColorOpt ? ` - ${activeColorOpt.color}` : ''}`} 
                                     className="pdp-main-image"
                                     fetchPriority="high" decoding="async"
                                     onError={(e) => {
@@ -124,24 +143,73 @@ const SubProductDetails = () => {
                                 <div className="pdp-image-placeholder">🎁</div>
                             )}
                         </div>
-                        <div className="pdp-thumbnails">
-                            {galleryImages && galleryImages.map((img, idx) => (
-                                <div 
-                                    key={idx} 
-                                    className={`pdp-thumb ${activeImg === idx ? 'active' : ''}`}
-                                    onClick={() => setActiveImg(idx)}
-                                >
-                                    <img 
-                                        src={img} 
-                                        alt={`View ${idx + 1}`}
-                                        onError={(e) => {
-                                            e.target.onerror = null;
-                                            e.target.src = '/images/product-unavailable.svg';
-                                        }}
-                                    />
+
+                        {/* Gallery Thumbnails for active color/product */}
+                        {galleryImages && galleryImages.length > 0 && (
+                            <div className="pdp-thumbnails pdp-gallery-thumbnails">
+                                {galleryImages.map((img, idx) => (
+                                    <button 
+                                        key={`view-${idx}`} 
+                                        type="button"
+                                        className={`pdp-thumb ${activeImg === idx ? 'active' : ''}`}
+                                        onClick={() => setActiveImg(idx)}
+                                        title={`View image ${idx + 1}`}
+                                        aria-label={`View image ${idx + 1}`}
+                                    >
+                                        <img 
+                                            src={img} 
+                                            alt={`View ${idx + 1}`}
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = '/images/product-unavailable.svg';
+                                            }}
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* More Color Options Section */}
+                        {product.hasColors && product.colorOptions && product.colorOptions.length > 1 && (
+                            <div className="pdp-other-colors-section">
+                                <div className="pdp-other-colors-header">
+                                    <span className="pdp-other-colors-title">More Color Options</span>
+                                    <span className="pdp-other-colors-count">
+                                        {product.colorOptions.length - 1} other shades available
+                                    </span>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="pdp-thumbnails pdp-color-thumbnails">
+                                    {product.colorOptions.map((opt, idx) => {
+                                        if (idx === selectedColor) return null; // Hide the currently selected color
+                                        const colorImg = (opt.images && opt.images.length > 0) ? opt.images[0] : (product.images && product.images[0]);
+                                        if (!colorImg) return null;
+                                        return (
+                                            <button 
+                                                key={`color-${idx}`} 
+                                                type="button"
+                                                className="pdp-thumb pdp-color-thumb"
+                                                onClick={() => {
+                                                    setSelectedColor(idx);
+                                                    setActiveImg(0);
+                                                }}
+                                                title={`Switch to ${opt.color}`}
+                                                aria-label={`Select ${opt.color}`}
+                                            >
+                                                <img 
+                                                    src={colorImg} 
+                                                    alt={opt.color}
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = '/images/product-unavailable.svg';
+                                                    }}
+                                                />
+                                                <span className="pdp-thumb-label">{opt.color}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Information Section */}
@@ -151,39 +219,73 @@ const SubProductDetails = () => {
                             <h1 className="pdp-title">{product.name}</h1>
                             <div className="pdp-price-tag" style={{ alignItems: 'baseline' }}>
                                 <span className="pdp-currency">₹</span>
-                                <span className="pdp-val">{product.price === 0 ? 'Quote Required' : product.price}</span>
+                                <span className="pdp-val">{currentPrice === 0 ? 'Quote Required' : currentPrice}</span>
                                 <span style={{ fontSize: '0.55em', fontWeight: 'normal', opacity: 0.8, marginLeft: '8px' }}>(Inclusive of all taxes)</span>
+                                {selectedSet && (
+                                    <span style={{
+                                        fontSize: '0.55em',
+                                        background: '#E0F2FE',
+                                        color: '#0369A1',
+                                        padding: '3px 8px',
+                                        borderRadius: '12px',
+                                        fontWeight: 700,
+                                        marginLeft: '10px'
+                                    }}>
+                                        {selectedSet.name}
+                                    </span>
+                                )}
                             </div>
                         </div>
 
-                        {product.hasColors && product.colorOptions && product.colorOptions.length > 0 && (
-                            <div className="pdp-color-picker-section" style={{ marginBottom: '24px', padding: '16px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
-                                <span className="pdp-small-title" style={{ display: 'block', marginBottom: '12px', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em', color: 'var(--color-text-secondary)' }}>Color Options</span>
-                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                    {product.colorOptions.map((opt, idx) => (
-                                        <button
-                                            key={idx}
-                                            type="button"
-                                            onClick={() => {
-                                                setSelectedColor(idx);
-                                                setActiveImg(0);
-                                            }}
-                                            style={{
-                                                padding: '8px 16px',
-                                                borderRadius: '6px',
-                                                border: selectedColor === idx ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                                                background: selectedColor === idx ? 'var(--color-primary-light)' : '#fff',
-                                                color: selectedColor === idx ? 'var(--color-primary)' : 'var(--color-text-main)',
-                                                fontWeight: 600,
-                                                fontSize: '0.85rem',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s ease',
-                                                outline: 'none'
-                                            }}
-                                        >
-                                            {opt.color}
-                                        </button>
-                                    ))}
+                        {/* Set / Pack Size Options (Optional Backend Feature) */}
+                        {product.hasSets && product.setOptions && product.setOptions.length > 0 && (
+                            <div className="pdp-pack-selector-section">
+                                <div className="pdp-pack-selector-header">
+                                    <span className="pdp-small-title" style={{ margin: 0, fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em', color: 'var(--color-text-secondary)' }}>
+                                        Set / Pack Options
+                                    </span>
+                                    <span style={{ fontSize: '0.78rem', color: 'var(--color-primary)', fontWeight: 600 }}>
+                                        {selectedSet ? `${selectedSet.name} Selected` : 'Single Piece Selected'}
+                                    </span>
+                                </div>
+                                <div className="pdp-pack-options-grid">
+                                    {/* Base Single Unit Option */}
+                                    <button
+                                        type="button"
+                                        className={`pdp-pack-card ${selectedSetIdx === -1 ? 'active' : ''}`}
+                                        onClick={() => setSelectedSetIdx(-1)}
+                                    >
+                                        <div className="pdp-pack-card-top">
+                                            <span className="pdp-pack-name">Single Unit</span>
+                                            <span className="pdp-pack-price">₹{product.price}</span>
+                                        </div>
+                                        <span className="pdp-pack-sub">1 Piece</span>
+                                    </button>
+
+                                    {/* Set Options configured in backend */}
+                                    {product.setOptions.map((setOpt, sIdx) => {
+                                        const qty = Number(setOpt.quantity) || 2;
+                                        const unitPrice = setOpt.price ? Math.round(Number(setOpt.price) / qty) : null;
+                                        return (
+                                            <button
+                                                key={sIdx}
+                                                type="button"
+                                                className={`pdp-pack-card ${selectedSetIdx === sIdx ? 'active' : ''}`}
+                                                onClick={() => setSelectedSetIdx(sIdx)}
+                                            >
+                                                <div className="pdp-pack-card-top">
+                                                    <span className="pdp-pack-name">{setOpt.name || `Set of ${qty}`}</span>
+                                                    <span className="pdp-pack-price">₹{setOpt.price}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                                    <span className="pdp-pack-sub">{qty} Pieces</span>
+                                                    {unitPrice && (
+                                                        <span className="pdp-pack-unit-price">₹{unitPrice}/pc</span>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -317,6 +419,20 @@ const SubProductDetails = () => {
                             </button>
                         </div>
 
+                        {/* Returns & Replacements Policy Notice */}
+                        <div className="pdp-policy-notice">
+                            <div className="pdp-policy-notice-header">
+                                <RotateCcw size={16} className="pdp-policy-icon" />
+                                <span className="pdp-policy-title">Returns & Replacements</span>
+                            </div>
+                            <p className="pdp-policy-text">
+                                Received a defective, damaged, or incorrect product? Check our Return & Refund Policy for eligibility and instructions.
+                            </p>
+                            <Link to="/return-policy" className="pdp-policy-link">
+                                Read Return & Refund Policy &rarr;
+                            </Link>
+                        </div>
+
                         {/* Trust Badges */}
                         <div className="pdp-trust-bar">
                             <div className="trust-item">
@@ -341,7 +457,7 @@ const SubProductDetails = () => {
                 <div className="mobile-sticky-inner">
                     <div className="mobile-sticky-price" style={{ alignItems: 'baseline' }}>
                         <span className="sticky-currency">₹</span>
-                        <span className="sticky-val">{product.price}</span>
+                        <span className="sticky-val">{currentPrice}</span>
                         <span style={{ fontSize: '0.65em', fontWeight: 'normal', opacity: 0.9, marginLeft: '6px' }}>(Inclusive of all taxes)</span>
                     </div>
                     <button className="btn-sticky-add" onClick={handleAddToCart}>

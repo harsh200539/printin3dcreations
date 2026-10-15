@@ -60,7 +60,7 @@ const Footer = () => {
                             <li><Link to="/faq" onClick={scrollToTop}>Help Center</Link></li>
                             <li><Link to="/contact" onClick={scrollToTop}>Custom Quote</Link></li>
                             <li><Link to="/terms" onClick={scrollToTop}>Terms of Service</Link></li>
-                            <li><Link to="/return-policy" onClick={scrollToTop}>Return Policy</Link></li>
+                            <li><Link to="/return-policy" onClick={scrollToTop}>Return & Refund Policy</Link></li>
                         </ul>
                     </div>
 

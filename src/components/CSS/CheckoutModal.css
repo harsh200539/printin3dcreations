@@ -196,6 +196,97 @@ body.body-checkout-open .mobile-menu-btn {
     box-shadow: 0 15px 30px rgba(37, 211, 102, 0.3);
 }
 
+/* ── Checkout Return Policy Acknowledgment ── */
+.checkout-policy-box {
+    margin: 14px 0 16px 0;
+    padding: 12px 16px;
+    background: #F8FAFC;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.checkout-policy-box.has-error {
+    background: #FEF2F2;
+    border-color: #F87171;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.checkout-policy-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.checkout-policy-icon {
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.checkout-policy-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    letter-spacing: -0.01em;
+}
+
+.checkout-policy-desc {
+    font-size: 0.76rem;
+    color: var(--color-text-secondary);
+    line-height: 1.45;
+    margin: 0;
+}
+
+.checkout-policy-inline-link {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.checkout-policy-inline-link:hover {
+    color: #991B1B;
+}
+
+.checkout-policy-checkbox-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--color-text-main);
+    user-select: none;
+}
+
+.checkout-policy-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    margin-top: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkout-policy-checkbox-text {
+    line-height: 1.4;
+    font-weight: 600;
+}
+
+.checkout-policy-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #DC2626;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
 /* ── MOBILE OPTIMIZATIONS ── */
 @media (max-width: 768px) {
     .checkout-overlay {

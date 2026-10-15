@@ -31,6 +31,9 @@ export const CartProvider = ({ children }) => {
         if (product.selectedColor) {
             itemKey += `__${product.selectedColor.trim().toLowerCase()}`;
         }
+        if (product.selectedSet) {
+            itemKey += `__${product.selectedSet.trim().toLowerCase()}`;
+        }
 
         setCartItems(prevItems => {
             const existingItem = prevItems.find(item => item.cartKey === itemKey);
@@ -66,8 +69,17 @@ export const CartProvider = ({ children }) => {
 
     const toggleCart = () => setIsCartOpen(prev => !prev);
 
+    const FREE_DELIVERY_THRESHOLD = 999;
+    const STANDARD_DELIVERY_CHARGE = 99;
+
     const getCartCount = () => cartItems.reduce((count, item) => count + item.quantity, 0);
     const getCartTotal = () => cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    
+    // Delivery charge is ₹0 (Free) if subtotal >= 999; ₹99 if subtotal < 999 (when cart has items)
+    const getDeliveryCharge = () => (cartItems.length > 0 && getCartTotal() < FREE_DELIVERY_THRESHOLD ? STANDARD_DELIVERY_CHARGE : 0);
+    const getFinalTotal = () => getCartTotal() + getDeliveryCharge();
+    const isFreeDelivery = () => getCartTotal() >= FREE_DELIVERY_THRESHOLD;
+    const getAmountForFreeDelivery = () => Math.max(0, FREE_DELIVERY_THRESHOLD - getCartTotal());
 
     return (
         <CartContext.Provider value={{
@@ -84,6 +96,12 @@ export const CartProvider = ({ children }) => {
             cartCount: getCartCount(),
             getCartCount,
             getCartTotal,
+            getDeliveryCharge,
+            getFinalTotal,
+            isFreeDelivery,
+            getAmountForFreeDelivery,
+            FREE_DELIVERY_THRESHOLD,
+            STANDARD_DELIVERY_CHARGE,
             notification, 
             setNotification
         }}>

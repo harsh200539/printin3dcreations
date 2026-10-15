@@ -28,6 +28,7 @@ export function normalizeCatalog(topics, products) {
             customizable: !!p.customizable, customizationLabel: p.customization_label || '',
             customizationPlaceholder: p.customization_placeholder || '', customLettersLimit: p.custom_letters_limit || 50,
             hasColors: !!p.has_colors, colorOptions: p.color_options || [],
+            hasSets: !!p.has_sets, setOptions: p.set_options || [],
             isBestseller: !!p.is_bestseller,
             isActive: p.is_active !== undefined ? !!p.is_active : true,
             rawHasBestseller: p.is_bestseller !== undefined

@@ -43,6 +43,8 @@ const AdminProducts = () => {
     const [imageUrlInput, setImageUrlInput] = useState('');
     const [hasColors, setHasColors] = useState(false);
     const [colorOptions, setColorOptions] = useState([]);
+    const [hasSets, setHasSets] = useState(false);
+    const [setOptions, setSetOptions] = useState([]);
 
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
@@ -101,6 +103,8 @@ const AdminProducts = () => {
         setImages([]);
         setHasColors(false);
         setColorOptions([]);
+        setHasSets(false);
+        setSetOptions([]);
         setCustomizable(false);
         setCustomizationLabel('');
         setCustomizationPlaceholder('');
@@ -131,6 +135,14 @@ const AdminProducts = () => {
                 color: opt.color || '',
                 images: opt.images || [],
                 urlInput: ''
+            }))
+        );
+        setHasSets(p.hasSets || false);
+        setSetOptions(
+            (p.setOptions || []).map(s => ({
+                name: s.name || '',
+                quantity: s.quantity || 2,
+                price: s.price !== undefined ? s.price : ''
             }))
         );
         setCustomizable(p.customizable || false);
@@ -249,6 +261,16 @@ const AdminProducts = () => {
             ? colorOptions.map(opt => ({ color: opt.color, images: opt.images }))
             : [];
 
+        const savedSetOptions = hasSets
+            ? setOptions
+                .filter(s => s && (s.name || s.quantity) && s.price !== '' && !isNaN(Number(s.price)))
+                .map(s => ({
+                    name: s.name ? s.name.trim() : `Set of ${s.quantity || 2}`,
+                    quantity: Number(s.quantity) || 2,
+                    price: Number(s.price)
+                }))
+            : [];
+
         const savedImages = hasColors
             ? (colorOptions.length > 0 && colorOptions[0].images.length > 0 ? colorOptions[0].images : images)
             : images;
@@ -265,6 +287,8 @@ const AdminProducts = () => {
             features,
             has_colors: hasColors,
             color_options: savedColorOptions,
+            has_sets: hasSets,
+            set_options: savedSetOptions,
             customizable: customizable,
             customization_label: customizationLabel,
             customization_placeholder: customizationPlaceholder,
@@ -473,7 +497,14 @@ const AdminProducts = () => {
                                     <td>
                                         <span className="badge-status active" style={{ background: '#EFF6FF', color: '#1E40AF' }}>{p.categoryName}</span>
                                     </td>
-                                    <td style={{ fontWeight: 800 }}>₹{p.price === 0 ? 'Quote' : p.price}</td>
+                                    <td style={{ fontWeight: 800 }}>
+                                        ₹{p.price === 0 ? 'Quote' : p.price}
+                                        {p.hasSets && p.setOptions && p.setOptions.length > 0 && (
+                                            <div style={{ fontSize: '0.68rem', color: '#0284C7', fontWeight: 600, marginTop: '2px' }}>
+                                                📦 {p.setOptions.length} Sets
+                                            </div>
+                                        )}
+                                    </td>
                                     <td style={{ textAlign: 'center' }}>
                                         <button
                                             type="button"
@@ -602,6 +633,35 @@ const AdminProducts = () => {
                                             onChange={(e) => setPrice(e.target.value)}
                                         />
                                         <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-muted)', marginTop: '4px', display: 'block' }}>Enter 0 for WhatsApp Quote Items</span>
+                                        <div style={{ marginTop: '10px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const nextVal = !hasSets;
+                                                    setHasSets(nextVal);
+                                                    if (nextVal && setOptions.length === 0) {
+                                                        const defaultPrice = price ? Math.round(Number(price) * 1.85) : '';
+                                                        setSetOptions([{ name: 'Set of 2', quantity: 2, price: defaultPrice }]);
+                                                    }
+                                                }}
+                                                style={{
+                                                    background: hasSets ? '#DCFCE7' : '#F1F5F9',
+                                                    color: hasSets ? '#15803D' : '#475569',
+                                                    border: hasSets ? '1px solid #86EFAC' : '1px solid var(--admin-border)',
+                                                    padding: '6px 12px',
+                                                    borderRadius: '6px',
+                                                    fontSize: '0.78rem',
+                                                    fontWeight: 700,
+                                                    cursor: 'pointer',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            >
+                                                📦 {hasSets ? '✓ Set Pricing Active (Configured Below)' : '+ Add Set / Pack Pricing (Set of 2, 4...)'}
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="admin-form-group">
@@ -799,6 +859,117 @@ const AdminProducts = () => {
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Set / Pack Pricing Options (Optional) */}
+                                    <div className="admin-form-group" style={{
+                                        marginBottom: '20px',
+                                        padding: '14px',
+                                        background: hasSets ? '#F0FDF4' : '#F8FAFC',
+                                        border: hasSets ? '1px solid #86EFAC' : '1px solid var(--admin-border)',
+                                        borderRadius: '8px',
+                                        transition: 'all 0.2s ease'
+                                    }}>
+                                        <label className="admin-checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600, color: hasSets ? '#166534' : 'inherit' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={hasSets}
+                                                onChange={(e) => setHasSets(e.target.checked)}
+                                                style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#16A34A' }}
+                                            />
+                                            Enable Set / Bundle Pricing (e.g. Set of 2, Set of 4)
+                                        </label>
+                                        <p style={{ margin: '4px 0 0 24px', fontSize: '0.75rem', color: 'var(--admin-text-muted)' }}>
+                                            Optional: Allow customers to choose product sets/packs with customized bundle prices.
+                                        </p>
+
+                                        {hasSets && (
+                                            <div style={{ marginTop: '14px', paddingLeft: '4px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#166534' }}>Set Tiers & Prices</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSetOptions([...setOptions, { name: '', quantity: 2, price: '' }])}
+                                                        className="admin-btn-secondary"
+                                                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                                    >
+                                                        + Add Set Tier
+                                                    </button>
+                                                </div>
+
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                    {setOptions.map((setOpt, sIdx) => (
+                                                        <div key={sIdx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid var(--admin-border)' }}>
+                                                            <div style={{ flex: 2 }}>
+                                                                <label style={{ fontSize: '0.7rem', color: 'var(--admin-text-muted)', display: 'block', marginBottom: '2px' }}>Set Name</label>
+                                                                <input
+                                                                    type="text"
+                                                                    className="admin-form-control"
+                                                                    placeholder="e.g. Set of 2 / Pack of 4"
+                                                                    value={setOpt.name || ''}
+                                                                    onChange={(e) => {
+                                                                        const copy = [...setOptions];
+                                                                        copy[sIdx].name = e.target.value;
+                                                                        setSetOptions(copy);
+                                                                    }}
+                                                                    style={{ height: '34px', fontSize: '0.8rem' }}
+                                                                />
+                                                            </div>
+                                                            <div style={{ flex: 1 }}>
+                                                                <label style={{ fontSize: '0.7rem', color: 'var(--admin-text-muted)', display: 'block', marginBottom: '2px' }}>Qty (Units)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    className="admin-form-control"
+                                                                    placeholder="2"
+                                                                    min="1"
+                                                                    value={setOpt.quantity || ''}
+                                                                    onChange={(e) => {
+                                                                        const copy = [...setOptions];
+                                                                        copy[sIdx].quantity = parseInt(e.target.value) || 1;
+                                                                        setSetOptions(copy);
+                                                                    }}
+                                                                    style={{ height: '34px', fontSize: '0.8rem' }}
+                                                                />
+                                                            </div>
+                                                            <div style={{ flex: 1.2 }}>
+                                                                <label style={{ fontSize: '0.7rem', color: 'var(--admin-text-muted)', display: 'block', marginBottom: '2px' }}>Set Price (₹)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    className="admin-form-control"
+                                                                    placeholder="299"
+                                                                    min="0"
+                                                                    value={setOpt.price !== undefined ? setOpt.price : ''}
+                                                                    onChange={(e) => {
+                                                                        const copy = [...setOptions];
+                                                                        copy[sIdx].price = e.target.value === '' ? '' : Number(e.target.value);
+                                                                        setSetOptions(copy);
+                                                                    }}
+                                                                    style={{ height: '34px', fontSize: '0.8rem' }}
+                                                                />
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const copy = [...setOptions];
+                                                                    copy.splice(sIdx, 1);
+                                                                    setSetOptions(copy);
+                                                                }}
+                                                                className="btn-media-delete"
+                                                                style={{ position: 'static', width: '28px', height: '28px', marginTop: '16px' }}
+                                                                title="Remove Set"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    {setOptions.length === 0 && (
+                                                        <p style={{ color: 'var(--admin-text-muted)', fontSize: '0.75rem', margin: '4px 0' }}>
+                                                            No set tiers added yet. Click "+ Add Set Tier" (e.g. Set of 2: ₹320).
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
 
                                     {/* Color Options Toggle */}
                                     <div className="admin-form-group" style={{ marginBottom: '20px' }}>

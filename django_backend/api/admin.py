@@ -10,10 +10,30 @@ class TopicAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('product_id', 'name', 'topic', 'price', 'is_active', 'is_bestseller', 'customizable', 'has_colors')
-    list_filter = ('is_active', 'is_bestseller', 'topic', 'customizable', 'has_colors')
+    list_display = ('product_id', 'name', 'topic', 'price', 'is_active', 'is_bestseller', 'has_sets', 'has_colors', 'customizable')
+    list_filter = ('has_sets', 'is_active', 'is_bestseller', 'has_colors', 'customizable', 'topic')
     search_fields = ('product_id', 'name', 'desc')
     list_editable = ('is_active', 'is_bestseller', 'price')
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('product_id', 'topic', 'name', 'price', 'is_active', 'is_bestseller', 'desc', 'full_details', 'images')
+        }),
+        ('📦 Product Set / Pack Pricing', {
+            'fields': ('has_sets', 'set_options'),
+            'description': 'Enable bundle/set options (e.g. Set of 2, Set of 4) with custom prices. Example set_options: [{"name": "Set of 2", "quantity": 2, "price": 249}, {"name": "Set of 4", "quantity": 4, "price": 449}]'
+        }),
+        ('🎨 Color Variants', {
+            'fields': ('has_colors', 'color_options'),
+            'description': 'Enable color options and assign specific product images per color shade.'
+        }),
+        ('✨ Customization Settings', {
+            'fields': ('customizable', 'customization_label', 'customization_placeholder', 'custom_letters_limit')
+        }),
+        ('⚙️ Technical Specs & Features', {
+            'fields': ('specs', 'features'),
+            'classes': ('collapse',)
+        }),
+    )
 
 @admin.register(SiteSetting)
 class SiteSettingAdmin(admin.ModelAdmin):

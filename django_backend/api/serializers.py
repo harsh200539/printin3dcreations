@@ -42,6 +42,19 @@ class ProductSerializer(serializers.ModelSerializer):
             if not isinstance(item, dict): raise serializers.ValidationError('Invalid colour option.')
             validate_images(item.get('images', []))
         return values
+    def validate_set_options(self, values):
+        if not isinstance(values, list) or len(values) > 20:
+            raise serializers.ValidationError('Invalid set options.')
+        for item in values:
+            if not isinstance(item, dict):
+                raise serializers.ValidationError('Invalid set option.')
+            if 'price' in item and item['price'] != '' and item['price'] is not None:
+                try:
+                    p = float(item['price'])
+                    if p < 0: raise serializers.ValidationError('Set price cannot be negative.')
+                except (ValueError, TypeError):
+                    raise serializers.ValidationError('Set price must be a valid number.')
+        return values
     def validate_price(self, value):
         if value < 0: raise serializers.ValidationError('Price cannot be negative.')
         return value

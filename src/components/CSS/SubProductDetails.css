@@ -68,33 +68,100 @@
 
 .pdp-thumbnails {
     display: flex;
-    gap: 16px;
+    gap: 12px;
     margin-top: 20px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .pdp-thumb {
-    width: 80px;
-    height: 80px;
-    border-radius: 16px;
+    position: relative;
+    width: 82px;
+    height: 82px;
+    border-radius: 14px;
     background: var(--color-bg-white);
-    border: 2px solid transparent;
+    border: 2px solid var(--color-border);
     cursor: pointer;
     overflow: hidden;
-    transition: all var(--t-fast) ease;
-    opacity: 0.6;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.9;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .pdp-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.pdp-thumb:hover {
+    border-color: var(--color-primary);
+    opacity: 1;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+
+.pdp-thumb:hover img {
+    transform: scale(1.08);
 }
 
 .pdp-thumb.active {
     border-color: var(--color-primary);
     opacity: 1;
-    transform: scale(1.05);
+    box-shadow: 0 0 0 2px var(--color-primary-light), 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: scale(1.04);
+}
+
+.pdp-thumb-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.72) 75%, transparent 100%);
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 6px 3px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+    line-height: 1.1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.pdp-other-colors-section {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--color-border);
+}
+
+.pdp-other-colors-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.pdp-other-colors-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-main);
+}
+
+.pdp-other-colors-count {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
 }
 
 /* ── Info Panel ── */
@@ -493,6 +560,68 @@
 
 .btn-pdp-main.success { background: #10B981; }
 
+/* ── PDP Policy Notice ── */
+.pdp-policy-notice {
+    margin: 20px 0 16px 0;
+    padding: 14px 18px;
+    background: #F8FAFC;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 14px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all var(--t-base, 0.2s) ease;
+}
+
+.pdp-policy-notice:hover {
+    border-color: #CBD5E1;
+    background: #F1F5F9;
+}
+
+.pdp-policy-notice-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pdp-policy-icon {
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.pdp-policy-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    letter-spacing: -0.01em;
+}
+
+.pdp-policy-text {
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.pdp-policy-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: none;
+    margin-top: 2px;
+    width: fit-content;
+    transition: all 0.2s ease;
+}
+
+.pdp-policy-link:hover {
+    text-decoration: underline;
+    transform: translateX(3px);
+}
+
 /* ── PDP Trust Bar ── */
 .pdp-trust-bar {
     display: flex;
@@ -590,4 +719,96 @@
 @keyframes slideUp {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
+}
+
+/* ── Set / Pack Options Selector ── */
+.pdp-pack-selector-section {
+    margin: 20px 0 10px 0;
+    padding: 16px 18px;
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 16px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.pdp-pack-selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.pdp-pack-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.pdp-pack-card {
+    background: #FFFFFF;
+    border: 1.5px solid var(--color-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    outline: none;
+    font-family: inherit;
+}
+
+.pdp-pack-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(200, 35, 74, 0.08);
+}
+
+.pdp-pack-card.active {
+    border-color: var(--color-primary);
+    background: rgba(200, 35, 74, 0.04);
+    box-shadow: 0 0 0 1.5px var(--color-primary), 0 6px 18px rgba(200, 35, 74, 0.12);
+    transform: translateY(-1px);
+}
+
+.pdp-pack-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.pdp-pack-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    letter-spacing: -0.01em;
+}
+
+.pdp-pack-card.active .pdp-pack-name {
+    color: var(--color-primary);
+}
+
+.pdp-pack-price {
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--color-primary);
+}
+
+.pdp-pack-sub {
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+}
+
+.pdp-pack-unit-price {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #059669;
+    background: rgba(5, 150, 105, 0.1);
+    padding: 2px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.01em;
 }

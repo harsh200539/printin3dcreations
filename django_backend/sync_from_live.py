@@ -84,6 +84,8 @@ def sync():
                     'features': p.get('features', []) or [],
                     'has_colors': p.get('has_colors', False) or False,
                     'color_options': p.get('color_options', []) or [],
+                    'has_sets': p.get('has_sets', False) or False,
+                    'set_options': p.get('set_options', []) or [],
                     'customizable': p.get('customizable', False) or False,
                     'customization_label': p.get('customization_label', '') or '',
                     'customization_placeholder': p.get('customization_placeholder', '') or '',

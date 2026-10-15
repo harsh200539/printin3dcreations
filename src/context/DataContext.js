@@ -12,7 +12,7 @@ export const DEFAULT_SITE_SETTINGS = {
             badge: 'Free Shipping',
             badge_type: 'cyan',
             main_text: 'on Orders',
-            highlight_text: 'Above ₹500',
+            highlight_text: 'Above ₹999',
             target: '#products'
         },
         {
