@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useData } from '../context/DataContext';
@@ -32,6 +32,7 @@ const SubProductDetails = () => {
     const navigate = useNavigate();
     const { addToCart } = useCart();
     const revealRef = useScrollReveal();
+    const galleryContainerRef = useRef(null);
     
     const [customText, setCustomText] = useState('');
     const [error, setError] = useState('');
@@ -86,6 +87,41 @@ const SubProductDetails = () => {
         setSelectedSetIdx(-1);
     }, [productId]);
 
+    useEffect(() => {
+        const el = galleryContainerRef.current;
+        if (!el) return;
+
+        const handleWheel = (e) => {
+            // Only apply on desktop view (two-column layout)
+            if (window.innerWidth <= 900) return;
+
+            const { scrollTop, scrollHeight, clientHeight } = el;
+            const maxScroll = scrollHeight - clientHeight;
+
+            if (maxScroll > 1) {
+                const isScrollingDown = e.deltaY > 0;
+                const isScrollingUp = e.deltaY < 0;
+                const canScrollDown = scrollTop < maxScroll - 1;
+                const canScrollUp = scrollTop > 1;
+
+                if ((isScrollingDown && canScrollDown) || (isScrollingUp && canScrollUp)) {
+                    el.scrollTop += e.deltaY;
+                    e.preventDefault();
+                    e.stopPropagation();
+                } else {
+                    // Prevent wheel events inside gallery from leaking to window
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+        };
+
+        el.addEventListener('wheel', handleWheel, { passive: false });
+        return () => {
+            el.removeEventListener('wheel', handleWheel);
+        };
+    }, [product, galleryImages, selectedColor]);
+
     if (loading) return <div className="error-container" role="status">Loading product...</div>;
     if (!product || !topic) return <NotFound />;
 
@@ -126,7 +162,7 @@ const SubProductDetails = () => {
 
                 <div className="pdp-main-grid">
                     {/* Gallery Section */}
-                    <div className="pdp-gallery-container reveal-hidden">
+                    <div className="pdp-gallery-container" ref={galleryContainerRef}>
                         <div className="pdp-main-viewport glass-panel">
                             {galleryImages && galleryImages[activeImg] ? (
                                 <img 

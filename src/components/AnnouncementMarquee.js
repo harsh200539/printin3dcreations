@@ -1,5 +1,5 @@
-import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
 import { useData } from '../context/DataContext';
 import { Truck, Zap, Sparkles, Tag, Flame, Gift, Heart, Star, ShoppingBag } from 'lucide-react';
 import './CSS/AnnouncementMarquee.css';

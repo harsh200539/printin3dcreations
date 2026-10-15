@@ -2,8 +2,8 @@
    PREMIUM PRODUCT DETAILS (PDP)
 ══════════════════════════════════════════ */
 .pdp-premium {
-    padding-top: 140px;
-    padding-bottom: 120px;
+    padding-top: 85px;
+    padding-bottom: 100px;
     background: var(--color-bg-main);
     min-height: 100vh;
 }
@@ -18,7 +18,7 @@
     font-weight: 600;
     font-size: 0.9rem;
     cursor: pointer;
-    margin-bottom: 40px;
+    margin-bottom: 12px;
     transition: all var(--t-base) ease;
 }
 
@@ -29,21 +29,53 @@
 
 .pdp-main-grid {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: 72px;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 56px;
     align-items: start;
 }
 
-/* ── Gallery Section ── */
+/* ── Gallery Section (Independently scrollable on desktop) ── */
 .pdp-gallery-container {
     position: sticky;
-    top: 120px;
+    top: 80px;
+    height: calc(100vh - 95px);
+    max-height: calc(100vh - 95px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 12px;
+    padding-bottom: 28px;
+    transform: none !important;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
+}
+
+.pdp-gallery-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pdp-gallery-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pdp-gallery-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 10px;
+}
+
+.pdp-gallery-container::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+}
+
+.pdp-premium .container,
+.pdp-gallery-container {
+    transform: none !important;
 }
 
 .pdp-main-viewport {
-    height: 560px;
+    height: clamp(280px, 36vh, 400px);
     background: var(--color-bg-white);
-    border-radius: 40px;
+    border-radius: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -76,8 +108,8 @@
 
 .pdp-thumb {
     position: relative;
-    width: 82px;
-    height: 82px;
+    width: 76px;
+    height: 76px;
     border-radius: 14px;
     background: var(--color-bg-white);
     border: 2px solid var(--color-border);
@@ -696,16 +728,22 @@
 
 /* ── Responsive ── */
 @media (max-width: 1024px) {
-    .pdp-main-grid { gap: 40px; }
-    .pdp-title { font-size: 2.8rem; }
-    .pdp-main-viewport { height: 480px; }
+    .pdp-main-grid { gap: 36px; }
+    .pdp-title { font-size: 2.6rem; }
+    .pdp-main-viewport { height: clamp(260px, 34vh, 360px); }
 }
 
 @media (max-width: 900px) {
-    .pdp-main-grid { grid-template-columns: 1fr; }
-    .pdp-gallery-container { position: static; }
+    .pdp-main-grid { grid-template-columns: 1fr; gap: 32px; }
+    .pdp-gallery-container { 
+        position: static !important; 
+        height: auto !important;
+        max-height: none !important; 
+        overflow-y: visible !important; 
+        padding-right: 0; 
+    }
     .pdp-mobile-sticky { display: block; }
-    .pdp-premium { padding-bottom: 160px; } /* Space for sticky bar */
+    .pdp-premium { padding-bottom: 160px; padding-top: 75px; } /* Space for sticky bar */
     .pdp-actions { display: none; } /* Hide main CTA on mobile in favor of sticky */
 }
 
